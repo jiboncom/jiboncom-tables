@@ -1,14 +1,8 @@
 import pytest
 
-from great_tables._text import (
-    BaseText,
-    Text,
-    Md,
-    Html,
-    _latex_escape,
-    escape_pattern_str_latex,
-    _process_text,
-)
+from great_tables._text import (BaseText, Html, Md, Text, _latex_escape,
+                                _md_latex, _process_text,
+                                escape_pattern_str_latex)
 
 
 def test_base_text_class():
@@ -30,7 +24,7 @@ def test_md_class():
 
 def test_html_class():
     assert Html("<strong>text</strong>").to_html() == "<strong>text</strong>"
-    assert Html("<strong>text</strong>").to_latex() == "<strong>text</strong>"
+    assert Html("<strong>text</strong>").to_latex() == "\\textbf{text}"
 
 
 def test_latex_escape():
@@ -56,13 +50,9 @@ def test_process_text_html():
 def test_process_text_latex():
     assert _process_text("a & _b_", context="latex") == "a \\& \\_b\\_"
     assert _process_text(Text("\\_\\$"), context="latex") == "\\_\\$"
-    assert _process_text(Html("**a** & <b>"), context="latex") == "**a** \\& <b>"
+    assert _process_text(Html("**a** & <b>bold</b>"), context="latex") == "**a** \\& \\textbf{bold}"
+    assert _process_text(Md("**a**"), context="latex") == "\\textbf{a}"
     assert _process_text(None, context="latex") == ""
-
-    with pytest.raises(NotImplementedError) as exc_info:
-        _process_text(Md("**a** & <b>"), context="latex")
-
-    assert "Markdown to LaTeX conversion is not supported yet" in exc_info.value.args[0]
 
 
 def test_process_text_raises():
@@ -70,3 +60,7 @@ def test_process_text_raises():
         _process_text(1, context="html")  # type: ignore
 
     assert "Invalid type: <class 'int'>" in exc_info.value.args[0]
+
+
+def test_md_latex():
+    assert _md_latex("Testing **bold** text") == "Testing \\textbf{bold} text"
