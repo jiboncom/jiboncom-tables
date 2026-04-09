@@ -106,11 +106,12 @@ def convert_to_pt(x: str) -> float:
     return px_value * 3 / 4
 
 
-def latex_heading_row(content: list[str]) -> str:
-    return "".join([" & ".join(content) + " \\\\ \n", "\\midrule\\addlinespace[2.5pt]"])
+def latex_heading_row(content: list[str], simple: bool = False) -> str:
+    midrule = "\\midrule" if simple else "\\midrule\\addlinespace[2.5pt]"
+    return "".join([" & ".join(content) + " \\\\ \n", midrule])
 
 
-def create_table_start_l(data: GTData, use_longtable: bool) -> str:
+def create_table_start_l(data: GTData, use_longtable: bool, simple: bool = False) -> str:
     """
     Create the table start component for LaTeX output.
 
@@ -156,7 +157,7 @@ def create_table_start_l(data: GTData, use_longtable: bool) -> str:
     stub_col_defs = ""
     if has_stub:
         # Add 'l' for each stub column, with a '|' separator after the last one
-        stub_col_defs = "l" * len(stub_layout) + "|"
+        stub_col_defs = "l" * len(stub_layout) + ("" if simple else "|")
 
     # If a table width is specified, add an extra column
     # space to fill in enough space to match the width
@@ -205,7 +206,7 @@ def create_table_start_l(data: GTData, use_longtable: bool) -> str:
     return table_start
 
 
-def create_heading_component_l(data: GTData, use_longtable: bool) -> str:
+def create_heading_component_l(data: GTData, use_longtable: bool, simple: bool = False) -> str:
     """
     Create the heading component for LaTeX output.
 
@@ -217,6 +218,10 @@ def create_heading_component_l(data: GTData, use_longtable: bool) -> str:
     ----------
     data : GTData
         The GTData object that contains all the information about the table.
+    simple
+        When True, uses ``\\caption{}`` (numbered) without size formatting and places the subtitle
+        on the same line prefixed with " - ". When False (default), uses ``\\caption*{}`` with
+        ``\\large`` / ``\\small`` formatting.
 
     Returns
     -------
@@ -237,29 +242,44 @@ def create_heading_component_l(data: GTData, use_longtable: bool) -> str:
 
     title_str = _process_text(title, context="latex")
 
-    title_row = f"{{\\large {title_str}}}"
-
     has_subtitle = heading_has_subtitle(subtitle)
 
-    if has_subtitle:
-        subtitle_str = _process_text(subtitle, context="latex")
+    if simple:
+        # Simple mode: numbered \caption, no size formatting, subtitle on same line
+        title_row = f"{title_str}"
 
-        subtitle_row = f"{{\\small {subtitle_str}}}"
+        if has_subtitle:
+            subtitle_str = _process_text(subtitle, context="latex")
+            subtitle_row = f" - {subtitle_str}"
 
-        header_component = f"""\\caption*{{
+            header_component = f"""\\caption{{
+{title_row}{subtitle_row}
+}} {line_continuation if use_longtable else ""}"""
+        else:
+            header_component = f"""\\caption{{
+{title_row}
+}} {line_continuation if use_longtable else ""}"""
+    else:
+        # Default mode: \caption* with \large / \small formatting
+        title_row = f"{{\\large {title_str}}}"
+
+        if has_subtitle:
+            subtitle_str = _process_text(subtitle, context="latex")
+            subtitle_row = f"{{\\small {subtitle_str}}}"
+
+            header_component = f"""\\caption*{{
 {title_row} \\\\
 {subtitle_row}
 }} {line_continuation if use_longtable else ""}"""
-
-    else:
-        header_component = f"""\\caption*{{
+        else:
+            header_component = f"""\\caption*{{
 {title_row}
 }} {line_continuation if use_longtable else ""}"""
 
     return header_component
 
 
-def create_columns_component_l(data: GTData) -> str:
+def create_columns_component_l(data: GTData, simple: bool = False) -> str:
     """
     Create the columns component for LaTeX output.
 
@@ -303,7 +323,7 @@ def create_columns_component_l(data: GTData) -> str:
     # Prepend stub headers to column headings
     all_headings = stub_headers + headings_labels
 
-    table_col_headings = "".join(latex_heading_row(content=all_headings))
+    table_col_headings = "".join(latex_heading_row(content=all_headings, simple=simple))
 
     if spanner_row_count > 0:
         boxhead = data._boxhead
@@ -399,7 +419,7 @@ def create_columns_component_l(data: GTData) -> str:
     return columns_component
 
 
-def create_body_component_l(data: GTData) -> str:
+def create_body_component_l(data: GTData, simple: bool = False) -> str:
     """
     Create the body component for LaTeX output.
 
@@ -462,7 +482,11 @@ def create_body_component_l(data: GTData) -> str:
                 if not has_group_stub_column:
                     # Add midrule before group heading (except for first group, which already has
                     # one from column headers) then the group heading, then midrule after
-                    if first_group_added:
+                    if simple:
+                        # Simple mode: no midrule separators around group labels
+                        group_row = f"\\multicolumn{{{n_cols}}}{{l}}{{{group_label}}} \\\\[2.5pt]"
+                        first_group_added = True
+                    elif first_group_added:
                         group_row = f"\\midrule\\addlinespace[2.5pt]\n\\multicolumn{{{n_cols}}}{{l}}{{{group_label}}} \\\\[2.5pt] \n\\midrule\\addlinespace[2.5pt]"
                     else:
                         group_row = f"\\multicolumn{{{n_cols}}}{{l}}{{{group_label}}} \\\\[2.5pt] \n\\midrule\\addlinespace[2.5pt]"
@@ -512,7 +536,7 @@ def create_body_component_l(data: GTData) -> str:
     return all_body_rows
 
 
-def create_footer_component_l(data: GTData) -> str:
+def create_footer_component_l(data: GTData, simple: bool = False) -> str:
     """
     Create the footer component for LaTeX output.
 
@@ -523,6 +547,8 @@ def create_footer_component_l(data: GTData) -> str:
     ----------
     data : GTData
         The GTData object that contains all the information about the table.
+    simple
+        When True, wraps source notes in ``\\footnotesize`` instead of a ``minipage`` environment.
 
     Returns
     -------
@@ -542,8 +568,12 @@ def create_footer_component_l(data: GTData) -> str:
     # Create a formatted source notes string
     source_notes = "\\\\\n".join(source_notes) + "\\\\"
 
-    # Create the footer block
-    footer_block = f"""\\begin{{minipage}}{{\\linewidth}}
+    if simple:
+        # Simple mode: use \footnotesize wrapper
+        footer_block = f"{{\\footnotesize {source_notes}}}"
+    else:
+        # Default mode: use minipage environment
+        footer_block = f"""\\begin{{minipage}}{{\\linewidth}}
 {source_notes}
 \\end{{minipage}}"""
 
@@ -605,8 +635,12 @@ def derive_table_width_statement_l(data: GTData, use_longtable: bool) -> str:
     return statement
 
 
-def create_fontsize_statement_l(data: GTData) -> str:
+def create_fontsize_statement_l(data: GTData, simple: bool = False) -> str:
     table_font_size = data._options.table_font_size.value
+
+    # In simple mode, skip the font size statement when the default (16px) is used
+    if simple and table_font_size == "16px":
+        return ""
 
     fs_fmt = "\\fontsize{%3.1fpt}{%3.1fpt}\\selectfont\n"
 
@@ -634,7 +668,7 @@ def create_wrap_start_l(use_longtable: bool, tbl_pos: str | None) -> str:
 
     else:
         if tbl_pos is None:
-            tbl_pos = "!t"
+            tbl_pos = "!ht"
 
         tbl_pos = f"[{tbl_pos}]"
 
@@ -647,25 +681,57 @@ def create_wrap_end_l(use_longtable: bool) -> str:
     return wrap_end
 
 
-def _render_as_latex(data: GTData, use_longtable: bool = False, tbl_pos: str | None = None) -> str:
+def fit_table(table_str: str, tbl_width: str = "\\columnwidth") -> str:
+    """Resize a LaTeX table to fit a given width using ``\\resizebox``.
+
+    Replaces the ``tabular*`` environment with a ``tabular`` environment wrapped
+    in ``\\resizebox{<tbl_width>}{!}{...}``.
+
+    Parameters
+    ----------
+    table_str
+        The LaTeX table string (output of ``as_latex()``).
+    tbl_width
+        The target width, e.g. ``"\\columnwidth"`` (default) or ``"\\textwidth"``.
+
+    Returns
+    -------
+    str
+        The modified LaTeX string.
+    """
+    output = table_str.replace(
+        r"\begin{tabular*}{\linewidth}",
+        f"\\resizebox{{{tbl_width}}}{{!}}{{\\begin{{tabular}}",
+    )
+    output = output.replace(r"\end{tabular*}", r"\end{tabular}}")
+    return output
+
+
+def _render_as_latex(
+    data: GTData,
+    use_longtable: bool = False,
+    tbl_pos: str | None = None,
+    simple: bool = False,
+    tbl_label: str | None = None,
+) -> str:
     # Check for styles (not yet supported so warn user)
     if data._styles:
         _not_implemented("Styles are not yet supported in LaTeX output.")
 
     # Create a LaTeX fragment for the start of the table
-    table_start = create_table_start_l(data=data, use_longtable=use_longtable)
+    table_start = create_table_start_l(data=data, use_longtable=use_longtable, simple=simple)
 
     # Create the heading component
-    heading_component = create_heading_component_l(data=data, use_longtable=use_longtable)
+    heading_component = create_heading_component_l(data=data, use_longtable=use_longtable, simple=simple)
 
     # Create the columns component
-    columns_component = create_columns_component_l(data=data)
+    columns_component = create_columns_component_l(data=data, simple=simple)
 
     # Create the body component
-    body_component = create_body_component_l(data=data)
+    body_component = create_body_component_l(data=data, simple=simple)
 
     # Create the footnotes component
-    footer_component = create_footer_component_l(data=data)
+    footer_component = create_footer_component_l(data=data, simple=simple)
 
     # Create a LaTeX fragment for the ending tabular statement
     table_end = create_table_end_l(use_longtable=use_longtable)
@@ -674,7 +740,7 @@ def _render_as_latex(data: GTData, use_longtable: bool = False, tbl_pos: str | N
     table_width_statement = derive_table_width_statement_l(data=data, use_longtable=use_longtable)
 
     # Allow user to set a font-size
-    fontsize_statement = create_fontsize_statement_l(data=data)
+    fontsize_statement = create_fontsize_statement_l(data=data, simple=simple)
 
     # Create wrapping environment
     wrap_start_statement = create_wrap_start_l(use_longtable=use_longtable, tbl_pos=tbl_pos)
@@ -706,5 +772,14 @@ def _render_as_latex(data: GTData, use_longtable: bool = False, tbl_pos: str | N
 {footer_component}
 {wrap_end_statement}
 """
+
+    # Add \label if requested
+    if tbl_label is not None:
+        finalized_table = finalized_table.replace(
+            r"\end{table}", f"\\label{{{tbl_label}}}\n\\end{{table}}"
+        )
+        finalized_table = finalized_table.replace(
+            r"\endgroup", f"\\label{{{tbl_label}}}\n\\endgroup"
+        )
 
     return finalized_table

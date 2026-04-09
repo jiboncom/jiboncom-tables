@@ -257,7 +257,13 @@ def as_raw_html(
     return table_html
 
 
-def as_latex(self: GT, use_longtable: bool = False, tbl_pos: str | None = None) -> str:
+def as_latex(
+    self: GT,
+    use_longtable: bool = False,
+    tbl_pos: str | None = None,
+    simple: bool = True,
+    tbl_label: str | None = None,
+) -> str:
     """
     Output a GT object as LaTeX
 
@@ -282,6 +288,16 @@ def as_latex(self: GT, use_longtable: bool = False, tbl_pos: str | None = None) 
         table will be placed at the top of the page; if in the Quarto render then the table
         positioning option will be ignored in favor of any setting within the Quarto rendering
         environment.
+    simple
+        When True, produces cleaner LaTeX output better suited for academic documents: numbered
+        ``\\caption`` (instead of ``\\caption*``), no font-size formatting in headings, no vertical
+        line after stub columns, no ``\\addlinespace`` after midrules, no font-size statement when
+        using the default size, and ``\\footnotesize`` for source notes instead of a ``minipage``
+        environment. Defaults to False to preserve the original output style.
+    tbl_label
+        An optional LaTeX label for the table (e.g. ``"tab:results"``). When provided, a
+        ``\\label{<tbl_label>}`` command is inserted before the closing table environment so the
+        table can be cross-referenced with ``\\ref{<tbl_label>}``.
 
     Returns
     -------
@@ -344,7 +360,13 @@ def as_latex(self: GT, use_longtable: bool = False, tbl_pos: str | None = None) 
     """
     built_table = self._build_data(context="latex")
 
-    latex_table = _render_as_latex(data=built_table, use_longtable=use_longtable, tbl_pos=tbl_pos)
+    latex_table = _render_as_latex(
+        data=built_table,
+        use_longtable=use_longtable,
+        tbl_pos=tbl_pos,
+        simple=simple,
+        tbl_label=tbl_label,
+    )
 
     return latex_table
 

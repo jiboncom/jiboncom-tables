@@ -7,23 +7,12 @@ del _v
 
 # Main gt imports ----
 
-from .gt import GT
-from . import vals, loc, style
+from . import loc, style, vals
+from ._helpers import (LETTERS, define_units, google_font, html, letters, md,
+                       nanoplot_options, pct, px, random_id, system_fonts)
 from ._styles import FromColumn as from_column
-from ._helpers import (
-    letters,
-    LETTERS,
-    px,
-    pct,
-    md,
-    html,
-    google_font,
-    random_id,
-    system_fonts,
-    define_units,
-    nanoplot_options,
-)
-
+from ._utils_render_latex import fit_table
+from .gt import GT
 
 __all__ = (
     "GT",
@@ -40,6 +29,7 @@ __all__ = (
     "nanoplot_options",
     "random_id",
     "from_column",
+    "fit_table",
     "vals",
     "loc",
     "style",
