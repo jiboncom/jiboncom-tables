@@ -4,6 +4,52 @@
 
 _Absolutely Delightful Table-making in Python_
 
+
+## Fork-specific features
+
+This fork adds several features on top of upstream **Great Tables**:
+
+### Markdown & HTML in group labels
+
+Use `.tab_row_group_label(fn=md)` to render all row-group labels as Markdown (or `fn=html` for HTML). This is useful when your grouping column contains formatting like `**bold**` or `*italic*` text:
+
+```python
+from great_tables import GT, md
+import pandas as pd
+
+df = pd.DataFrame({
+    "group": ["**North**", "**North**", "*South*", "*South*"],
+    "city": ["NYC", "Boston", "Miami", "Atlanta"],
+    "pop": [8.3, 0.7, 0.4, 0.5],
+})
+
+(
+    GT(df, groupname_col="group")
+    .tab_row_group_label(fn=md)
+)
+```
+
+You can also override individual labels with keyword arguments:
+
+```python
+GT(df, groupname_col="group").tab_row_group_label(
+    **{"North": md("**Northern Region**"), "South": md("*Southern Region*")}
+)
+```
+
+### Simpler LaTeX output
+
+Pass `simple=True` to `.as_latex()` for cleaner, less opinionated LaTeX that integrates better with standard document classes. Use `tbl_label=` to add a `\label{}` for cross-referencing, and `fit_table()` to wrap a tabular in `\resizebox`:
+
+```python
+from great_tables import fit_table
+
+latex = GT(df).as_latex(simple=True, tbl_label="tab:my-table")
+
+# Rescale an existing tabular to fit column width
+latex = fit_table(latex)
+```
+
 [![Python Versions](https://img.shields.io/pypi/pyversions/great_tables.svg)](https://pypi.python.org/pypi/great_tables)
 [![PyPI](https://img.shields.io/pypi/v/great_tables)](https://pypi.org/project/great-tables/#history)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/great-tables)](https://pypistats.org/packages/great-tables)

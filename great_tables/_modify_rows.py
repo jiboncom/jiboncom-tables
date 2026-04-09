@@ -2,20 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Literal
 
-from ._gt_data import (
-    FormatFn,
-    GTData,
-    Locale,
-    RowGroups,
-    Styles,
-    SummaryRowInfo,
-)
-from ._tbl_data import (
-    PlExpr,
-    SelectExpr,
-    TblData,
-    eval_aggregate,
-)
+from ._gt_data import (FormatFn, GTData, Locale, RowGroups, Stub, Styles,
+                       SummaryRowInfo)
+from ._tbl_data import PlExpr, SelectExpr, TblData, eval_aggregate
+from ._text import BaseText
 
 if TYPE_CHECKING:
     from ._types import GTSelf
@@ -24,6 +14,70 @@ if TYPE_CHECKING:
 def row_group_order(self: GTSelf, groups: RowGroups) -> GTSelf:
     new_stub = self._stub.order_groups(groups)
 
+    return self._replace(_stub=new_stub)
+
+
+def tab_row_group_label(
+    self: GTSelf,
+    fn: Callable[[str], str | BaseText] | None = None,
+    **kwargs: str | BaseText,
+) -> GTSelf:
+    """Override the display label for one or more row groups.
+
+    By default, row group labels are plain strings taken from the groupname column.
+    Use this method to replace them with rich text (Markdown or HTML) or simply
+    rename them.
+
+    Parameters
+    ----------
+    fn
+        A callable applied to every group label at once. Typically ``md`` or ``html``
+        to render all group labels as Markdown or HTML respectively.  When provided
+        together with ``**kwargs``, the function is applied first and then any
+        per-group overrides in ``**kwargs`` are applied on top.
+    **kwargs
+        Keyword arguments where each key is the *group_id* (original group name)
+        and the value is the new label — either a plain ``str`` or a ``BaseText``
+        instance such as ``md()`` or ``html()``.
+
+    Returns
+    -------
+    GT
+        The GT object is returned for method chaining.
+
+    Examples
+    --------
+    Mark all group labels as Markdown in one call:
+
+    ```{python}
+    from great_tables import GT, md, exibble
+
+    GT(exibble, groupname_col="group").tab_row_group_label(fn=md)
+    ```
+
+    Override individual labels:
+
+    ```{python}
+    GT(exibble, groupname_col="group").tab_row_group_label(
+        **{"grp_a": md("**Group A**"), "grp_b": md("**Group B**")}
+    )
+    ```
+    """
+    stub = self._stub
+    group_rows = stub.group_rows
+
+    # Apply fn to all group labels first
+    if fn is not None:
+        for grp in group_rows:
+            label = grp.defaulted_label()
+            group_rows = group_rows.set_group_label(grp.group_id, fn(str(label)))
+
+    # Then apply per-group overrides
+    for group_id, label in kwargs.items():
+        group_rows = group_rows.set_group_label(group_id, label)
+
+    # Stub is a plain class; create a new instance with the updated group_rows
+    new_stub = Stub(rows=stub.rows, group_rows=group_rows)
     return self._replace(_stub=new_stub)
 
 

@@ -5,34 +5,21 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import Enum, auto
 from itertools import chain, product
-from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol, TypeVar, overload
+from typing import (TYPE_CHECKING, Any, Callable, Literal, Protocol, TypeVar,
+                    overload)
 
 from typing_extensions import Self, TypeAlias, Union
 
 from ._cols_merge import ColMergeInfo, ColMerges  # noqa: F401 (re-exported)
 from ._helpers import GoogleFontImports
-
 # TODO: move this class somewhere else (even gt_data could work)
 from ._styles import CellStyle
-from ._tbl_data import (
-    Agnostic,
-    DataFrameLike,
-    TblData,
-    _get_cell,
-    _get_column_dtype,
-    _set_cell,
-    copy_data,
-    create_empty_frame,
-    get_column_names,
-    n_rows,
-    to_list,
-    validate_frame,
-)
-from ._tbl_data_align import (
-    ALIGNMENT_MAP,
-    classify_dtype_for_alignment,
-    is_number_like_column,
-)
+from ._tbl_data import (Agnostic, DataFrameLike, TblData, _get_cell,
+                        _get_column_dtype, _set_cell, copy_data,
+                        create_empty_frame, get_column_names, n_rows, to_list,
+                        validate_frame)
+from ._tbl_data_align import (ALIGNMENT_MAP, classify_dtype_for_alignment,
+                              is_number_like_column)
 from ._text import BaseText
 from ._utils import OrderedSet
 
@@ -705,14 +692,14 @@ RowGroups: TypeAlias = list[str]
 @dataclass(frozen=True)
 class GroupRowInfo:
     group_id: str
-    group_label: str | None = None
+    group_label: str | BaseText | None = None
     indices: list[int] = field(default_factory=list)
     # row_start: int | None = None
     # row_end: int | None = None
     # has_summary_rows: bool = False  # TODO: remove
     summary_row_side: str | None = None
 
-    def defaulted_label(self) -> str:
+    def defaulted_label(self) -> str | BaseText:
         """Return a group label that has been defaulted."""
         label = self.group_label if self.group_label is not None else self.group_id
         return label
@@ -751,6 +738,14 @@ class GroupRows(_Sequence[GroupRowInfo]):
         reordered = [self[crnt_order[g]] for g in chain(non_missing, missing_groups)]
 
         return self.__class__(reordered)
+
+    def set_group_label(self, group_id: str, label: str | BaseText) -> Self:
+        """Return a new GroupRows with the label for *group_id* replaced."""
+        new_d = [
+            replace(grp, group_label=label) if grp.group_id == group_id else grp
+            for grp in self._d
+        ]
+        return self.__class__(new_d)
 
     def indices_map(self, n: int) -> list[tuple[int, GroupRowInfo | None]]:
         """Return pairs of row index, group label for all rows in data.

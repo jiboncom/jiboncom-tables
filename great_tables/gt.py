@@ -10,73 +10,38 @@ from ._boxhead import cols_align, cols_label, cols_label_rotate
 from ._cols_merge import perform_col_merge
 from ._data_color import data_color
 from ._export import as_latex, as_raw_html, save, show, write_raw_html
-from ._formats import (
-    fmt,
-    fmt_bytes,
-    fmt_currency,
-    fmt_date,
-    fmt_datetime,
-    fmt_engineering,
-    fmt_flag,
-    fmt_icon,
-    fmt_image,
-    fmt_integer,
-    fmt_markdown,
-    fmt_nanoplot,
-    fmt_number,
-    fmt_percent,
-    fmt_roman,
-    fmt_scientific,
-    fmt_tf,
-    fmt_time,
-    fmt_units,
-)
+from ._formats import (fmt, fmt_bytes, fmt_currency, fmt_date, fmt_datetime,
+                       fmt_engineering, fmt_flag, fmt_icon, fmt_image,
+                       fmt_integer, fmt_markdown, fmt_nanoplot, fmt_number,
+                       fmt_percent, fmt_roman, fmt_scientific, fmt_tf,
+                       fmt_time, fmt_units)
 from ._gt_data import GTData
 from ._heading import tab_header
 from ._helpers import random_id
-from ._modify_rows import grand_summary_rows, row_group_order, tab_stub, with_id, with_locale
-from ._options import (
-    opt_align_table_header,
-    opt_all_caps,
-    opt_css,
-    opt_footnote_marks,
-    opt_horizontal_padding,
-    opt_row_striping,
-    opt_stylize,
-    opt_table_font,
-    opt_table_outline,
-    opt_vertical_padding,
-    tab_options,
-)
+from ._modify_rows import (grand_summary_rows, row_group_order,
+                           tab_row_group_label, tab_stub, with_id, with_locale)
+from ._options import (opt_align_table_header, opt_all_caps, opt_css,
+                       opt_footnote_marks, opt_horizontal_padding,
+                       opt_row_striping, opt_stylize, opt_table_font,
+                       opt_table_outline, opt_vertical_padding, tab_options)
 from ._pipe import pipe
 from ._render import infer_render_env_defaults
 from ._render_checks import _render_check
 from ._source_notes import tab_source_note
-from ._spanners import (
-    cols_hide,
-    cols_merge,
-    cols_move,
-    cols_move_to_end,
-    cols_move_to_start,
-    cols_unhide,
-    cols_width,
-    tab_spanner,
-    tab_spanner_delim,
-)
+from ._spanners import (cols_hide, cols_merge, cols_move, cols_move_to_end,
+                        cols_move_to_start, cols_unhide, cols_width,
+                        tab_spanner, tab_spanner_delim)
 from ._stub import reorder_stub_df
 from ._stubhead import tab_stubhead
 from ._substitution import sub_missing, sub_zero
 from ._tab_create_modify import tab_style
 from ._tbl_data import _get_cell, n_rows
 from ._utils import _migrate_unformatted_to_output
-from ._utils_render_html import (
-    _get_table_defs,
-    create_body_component_h,
-    create_columns_component_h,
-    create_footnotes_component_h,
-    create_heading_component_h,
-    create_source_notes_component_h,
-)
+from ._utils_render_html import (_get_table_defs, create_body_component_h,
+                                 create_columns_component_h,
+                                 create_footnotes_component_h,
+                                 create_heading_component_h,
+                                 create_source_notes_component_h)
 
 if TYPE_CHECKING:
     from ._helpers import BaseText
@@ -281,6 +246,7 @@ class GT(
     tab_options = tab_options
 
     row_group_order = row_group_order
+    tab_row_group_label = tab_row_group_label
     tab_stub = tab_stub
     with_id = with_id
     with_locale = with_locale

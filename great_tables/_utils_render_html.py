@@ -6,15 +6,8 @@ from typing import TYPE_CHECKING, Any, cast
 from htmltools import HTML, TagList, css, tags
 
 from . import _locations as loc
-from ._gt_data import (
-    ColInfo,
-    ColInfoTypeEnum,
-    GroupRowInfo,
-    GTData,
-    StyleInfo,
-    Styles,
-    SummaryRowInfo,
-)
+from ._gt_data import (ColInfo, ColInfoTypeEnum, GroupRowInfo, GTData,
+                       StyleInfo, Styles, SummaryRowInfo)
 from ._spanners import spanners_print_matrix
 from ._tbl_data import _get_cell, cast_frame_to_string, replace_null_frame
 from ._text import BaseText, _process_text, _process_text_id
@@ -526,7 +519,7 @@ def create_body_component_h(data: GTData) -> str:
         if has_groups:
             # Only create if this is the first row of data within the group
             if group_info is not prev_group_info:
-                group_label = group_info.defaulted_label()
+                group_label = _process_text(group_info.defaulted_label())
 
                 _styles = [
                     style
