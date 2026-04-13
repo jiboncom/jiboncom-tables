@@ -74,6 +74,20 @@ latex = GT(df).as_latex(simple=True, tbl_label="tab:my-table")
 latex = fit_table(latex)
 ```
 
+### Clean Greek letters in LaTeX
+
+Unicode Greek letters (e.g. `α`, `β`, `σ`) in your data are automatically converted to their LaTeX math-mode equivalents (`\alpha`, `\beta`, `\sigma`, etc.) when rendering with `.as_latex()`. No extra steps needed — just use Greek characters in your DataFrame and they will render correctly in LaTeX:
+
+```python
+import pandas as pd
+from great_tables import GT
+
+df = pd.DataFrame({"parameter": ["α", "β", "σ"], "estimate": [0.5, 1.2, 0.3]})
+
+# Greek letters are automatically converted to LaTeX commands
+latex = GT(df).as_latex()
+```
+
 It all begins with **table data** in the form of a Pandas or Polars DataFrame. You then decide how to compose your output table with the elements and formatting you need for the task at hand. Finally, the table is rendered to HTML (the default option) or to an image file.
 
 The **Great Tables** package is designed to be both straightforward yet powerful. The emphasis is on simple methods for the everyday display table needs (but power when you need it). Here is a brief example of how to use **Great Tables** to create a table from the included `sp500` dataset:
