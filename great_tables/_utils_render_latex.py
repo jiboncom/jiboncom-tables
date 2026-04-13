@@ -782,4 +782,41 @@ def _render_as_latex(
             r"\endgroup", f"\\label{{{tbl_label}}}\n\\endgroup"
         )
 
+    # Replace greek letters with their LaTeX equivalents
+    finalized_table = clean_greek(finalized_table)
     return finalized_table
+
+
+def clean_greek(tbl_output: str) -> str:
+    # This function replaces common Greek letters with their LaTeX equivalents
+    greek_mapping = {
+        "α": "\\alpha",
+        "β": "\\beta",
+        "γ": "\\gamma",
+        "δ": "\\delta",
+        "ε": "\\epsilon",
+        "ζ": "\\zeta",
+        "η": "\\eta",
+        "θ": "\\theta",
+        "ι": "\\iota",
+        "κ": "\\kappa",
+        "λ": "\\lambda",
+        "μ": "\\mu",
+        "ν": "\\nu",
+        "ξ": "\\xi",
+        "ο": "\\omicron",
+        "π": "\\pi",
+        "ρ": "\\rho",
+        "σ": "\\sigma",
+        "τ": "\\tau",
+        "υ": "\\upsilon",
+        "φ": "\\phi",
+        "χ": "\\chi",
+        "ψ": "\\psi",
+        "ω": "\\omega",
+    }
+
+    for greek_char, latex_equiv in greek_mapping.items():
+        tbl_output = tbl_output.replace(greek_char, latex_equiv)
+
+    return tbl_output
