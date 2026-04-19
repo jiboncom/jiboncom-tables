@@ -536,7 +536,7 @@ def create_body_component_l(data: GTData, simple: bool = False) -> str:
     return all_body_rows
 
 
-def create_footer_component_l(data: GTData, simple: bool = False) -> str:
+def create_footer_component_l(data: GTData, simple: bool = True) -> str:
     """
     Create the footer component for LaTeX output.
 
@@ -569,8 +569,8 @@ def create_footer_component_l(data: GTData, simple: bool = False) -> str:
     source_notes = "\\\\\n".join(source_notes) + "\\\\"
 
     if simple:
-        # Simple mode: use \footnotesize wrapper
-        footer_block = f"{{\\footnotesize {source_notes}}}"
+        # Simple mode: use \scriptsize wrapper
+        footer_block = f"{{\\scriptsize {source_notes}}}"
     else:
         # Default mode: use minipage environment
         footer_block = f"""\\begin{{minipage}}{{\\linewidth}}
